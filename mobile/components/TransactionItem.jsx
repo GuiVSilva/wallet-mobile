@@ -1,19 +1,8 @@
-import { View, Text, TouchableOpacity } from 'react-native'
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
-import { styles } from '../assets/styles/home.styles'
 import { COLORS } from '../constants/colors'
 import { formatDate } from '../lib/utils'
-
-// Map categories to their respective icons
-const CATEGORY_ICONS = {
-  'Food & Drinks': 'fast-food',
-  Shopping: 'cart',
-  Transportation: 'car',
-  Entertainment: 'film',
-  Bills: 'receipt',
-  Income: 'cash',
-  Other: 'ellipsis-horizontal'
-}
+import { CATEGORY_ICONS } from '../constants/categories'
 
 export const TransactionItem = ({ item, onDelete }) => {
   const isIncome = parseFloat(item.amount) > 0
@@ -56,3 +45,66 @@ export const TransactionItem = ({ item, onDelete }) => {
     </View>
   )
 }
+
+const styles = StyleSheet.create({
+  transactionCard: {
+    backgroundColor: COLORS.card,
+    borderRadius: 12,
+    marginBottom: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: COLORS.shadow,
+    shadowOffset: {
+      width: 0,
+      height: 1
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2
+  },
+  transactionContent: {
+    flex: 1,
+    flexDirection: 'row',
+    padding: 15,
+    alignItems: 'center'
+  },
+  categoryIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: COLORS.backgroundLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12
+  },
+  transactionLeft: {
+    flex: 1
+  },
+  transactionTitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: COLORS.text,
+    marginBottom: 4
+  },
+  transactionCategory: {
+    fontSize: 14,
+    color: COLORS.textLight
+  },
+  transactionRight: {
+    alignItems: 'flex-end'
+  },
+  transactionAmount: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 4
+  },
+  transactionDate: {
+    fontSize: 12,
+    color: COLORS.textLight
+  },
+  deleteButton: {
+    padding: 15,
+    borderLeftWidth: 1,
+    borderLeftColor: COLORS.border
+  }
+})

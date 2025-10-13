@@ -75,3 +75,125 @@ export async function getSummaryByUserId(req, res) {
     res.status(500).json({ error: 'Internal server error' })
   }
 }
+
+export async function getCategorySummary(req, res) {
+  try {
+    const { userId } = req.params
+
+    const results = await sql`
+      SELECT 
+        category,
+        ABS(SUM(amount)) AS total
+      FROM transactions
+      WHERE user_id = ${userId}
+      GROUP BY category
+      ORDER BY total DESC
+    `
+
+    const totalSum = results.reduce((acc, item) => acc + Number(item.total), 0)
+
+    const data = results.map(item => ({
+      category: item.category,
+      total: Number(item.total),
+      percentage: totalSum > 0 ? (Number(item.total) / totalSum) * 100 : 0
+    }))
+
+    res.status(200).json(data)
+  } catch (error) {
+    console.error('Error fetching category summary:', error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export async function getMonthlyComparison(req, res) {
+  try {
+    const { userId } = req.params
+    const results = await sql`
+      SELECT 
+        DATE_TRUNC('month', created_at) AS month,
+        SUM(amount) AS total
+      FROM transactions
+      WHERE user_id = ${userId}
+      GROUP BY DATE_TRUNC('month', created_at)
+      ORDER BY month DESC
+      LIMIT 2
+    `
+
+    const currentMonth = results[0] || { total: 0 }
+    const previousMonth = results[1] || { total: 0 }
+
+    res.status(200).json({
+      currentMonth: Number(currentMonth.total),
+      previousMonth: Number(previousMonth.total)
+    })
+  } catch (error) {
+    console.error('Error fetching monthly comparison:', error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+// export async function getSummaryReport(req, res) {
+//   try {
+//     const { userId } = req.params
+
+//     const result = await sql`
+//       SELECT
+//         COALESCE(SUM(amount), 0) AS balance,
+//         COALESCE(SUM(CASE WHEN amount > 0 THEN amount ELSE 0 END), 0) AS income,
+//         COALESCE(SUM(CASE WHEN amount < 0 THEN amount ELSE 0 END), 0) AS expense
+//       FROM transactions
+//       WHERE user_id = ${userId}
+//     `
+
+//     const data = result[0]
+
+//     res.status(200).json({
+//       balance: Number(data.balance),
+//       income: Number(data.income),
+//       expense: Number(data.expense)
+//     })
+//   } catch (error) {
+//     console.error('Error fetching summary:', error)
+//     res.status(500).json({ error: 'Internal server error' })
+//   }
+// }
+
+export async function getSummaryReport(req, res) {
+  try {
+    const { userId } = req.params
+    const { period } = req.query // daily | weekly | monthly | yearly
+
+    // Cria o filtro de período dinamicamente
+    let dateCondition = sql``
+
+    if (period === 'daily') {
+      dateCondition = sql`AND DATE(created_at) = CURRENT_DATE`
+    } else if (period === 'weekly') {
+      dateCondition = sql`AND created_at >= date_trunc('week', CURRENT_DATE)`
+    } else if (period === 'monthly') {
+      dateCondition = sql`AND created_at >= date_trunc('month', CURRENT_DATE)`
+    } else if (period === 'yearly') {
+      dateCondition = sql`AND created_at >= date_trunc('year', CURRENT_DATE)`
+    }
+
+    // Executa a consulta resumida
+    const [summary] = await sql`
+      SELECT
+        COALESCE(SUM(amount), 0) AS balance,
+        COALESCE(SUM(CASE WHEN amount > 0 THEN amount ELSE 0 END), 0) AS income,
+        COALESCE(SUM(CASE WHEN amount < 0 THEN amount ELSE 0 END), 0) AS expense
+      FROM transactions
+      WHERE user_id = ${userId}
+      ${dateCondition}
+    `
+
+    res.status(200).json({
+      balance: Number(summary.balance),
+      income: Number(summary.income),
+      expense: Number(summary.expense)
+    })
+  } catch (error) {
+    console.error('Error fetching summary report:', error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+}

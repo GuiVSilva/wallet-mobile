@@ -1,27 +1,23 @@
 import { useUser } from '@clerk/clerk-expo'
-import { useRouter } from 'expo-router'
 import {
   Alert,
   FlatList,
-  Image,
   RefreshControl,
+  StyleSheet,
   Text,
-  TouchableOpacity,
   View
 } from 'react-native'
 import { SignOutButton } from '@/components/SignOutButton'
 import { useTransactions } from '../../hooks/useTransactions'
 import { useEffect, useState } from 'react'
 import PageLoader from '../../components/PageLoader'
-import { styles } from '../../assets/styles/home.styles'
-import { Ionicons } from '@expo/vector-icons'
 import { BalanceCard } from '../../components/BalanceCard'
 import { TransactionItem } from '../../components/TransactionItem'
 import NoTransactionsFound from '../../components/NoTransactionsFound'
+import { COLORS } from '../../constants/colors'
 
 export default function Page() {
   const { user } = useUser()
-  const router = useRouter()
   const [refreshing, setRefreshing] = useState(false)
 
   const { transactions, summary, isLoading, loadData, deleteTransaction } =
@@ -39,12 +35,12 @@ export default function Page() {
 
   const handleDelete = id => {
     Alert.alert(
-      'Delete Transaction',
-      'Are you sure you want to delete this transaction?',
+      'Excluir Transação',
+      'Você quer realmente excluir essa transação?',
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: 'Cancelar', style: 'cancel' },
         {
-          text: 'Delete',
+          text: 'Excluir',
           style: 'destructive',
           onPress: () => deleteTransaction(id)
         }
@@ -56,56 +52,109 @@ export default function Page() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.content}>
-        {/* HEADER */}
-        <View style={styles.header}>
-          {/* LEFT */}
-          <View style={styles.headerLeft}>
-            <Image
-              source={require('../../assets/images/logo.png')}
-              style={styles.headerLogo}
-              resizeMode="contain"
-            />
-            <View style={styles.welcomeContainer}>
-              <Text style={styles.welcomeText}>Welcome,</Text>
-              <Text style={styles.usernameText}>
-                {user?.emailAddresses[0]?.emailAddress.split('@')[0]}
-              </Text>
+      <View style={styles.mainContent}>
+        <View style={styles.content}>
+          <View style={styles.header}>
+            <View style={styles.headerLeft}>
+              <View style={styles.welcomeContainer}>
+                <Text style={styles.welcomeText}>Bem Vindo,</Text>
+                <Text style={styles.usernameText}>
+                  {user?.emailAddresses[0]?.emailAddress.split('@')[0]}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.headerRight}>
+              <SignOutButton />
             </View>
           </View>
-          {/* RIGHT */}
-          <View style={styles.headerRight}>
-            <TouchableOpacity
-              style={styles.addButton}
-              onPress={() => router.push('/create')}
-            >
-              <Ionicons name="add" size={20} color="#FFF" />
-              <Text style={styles.addButtonText}>Add</Text>
-            </TouchableOpacity>
-            <SignOutButton />
+
+          <BalanceCard summary={summary} />
+
+          <View style={styles.transactionsHeaderContainer}>
+            <Text style={styles.sectionTitle}>Transações Recentes</Text>
           </View>
         </View>
 
-        <BalanceCard summary={summary} />
-
-        <View style={styles.transactionsHeaderContainer}>
-          <Text style={styles.sectionTitle}>Recent Transactions</Text>
-        </View>
+        <FlatList
+          style={styles.transactionsList}
+          contentContainerStyle={styles.transactionsListContent}
+          data={transactions}
+          renderItem={({ item }) => (
+            <TransactionItem item={item} onDelete={handleDelete} />
+          )}
+          ListEmptyComponent={<NoTransactionsFound />}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        />
       </View>
-
-      <FlatList
-        style={styles.transactionsList}
-        contentContainerStyle={styles.transactionsListContent}
-        data={transactions}
-        renderItem={({ item }) => (
-          <TransactionItem item={item} onDelete={handleDelete} />
-        )}
-        ListEmptyComponent={<NoTransactionsFound />}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-      />
     </View>
   )
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.background
+  },
+  mainContent: {
+    flex: 1
+  },
+  content: {
+    padding: 20,
+    paddingBottom: 0
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+    paddingHorizontal: 0,
+    paddingVertical: 12
+  },
+  headerLeft: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center'
+  },
+  welcomeContainer: {
+    flex: 1
+  },
+  welcomeText: {
+    fontSize: 14,
+    color: COLORS.textLight,
+    fontWeight: 'bold',
+    marginBottom: 2
+  },
+  usernameText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.text
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12
+  },
+  transactionsHeaderContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+    paddingBottom: 5
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: COLORS.text,
+    marginBottom: 15
+  },
+  transactionsList: {
+    flex: 1,
+    marginHorizontal: 20
+  },
+  transactionsListContent: {
+    paddingBottom: 20
+  }
+})

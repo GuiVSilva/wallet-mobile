@@ -1,8 +1,13 @@
 import { useState } from 'react'
-import { Text, TextInput, TouchableOpacity, View } from 'react-native'
+import {
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
+} from 'react-native'
 import { useSignUp } from '@clerk/clerk-expo'
 import { useRouter } from 'expo-router'
-import { styles } from '@/assets/styles/auth.styles.js'
 import { Ionicons } from '@expo/vector-icons'
 import { COLORS } from '../../constants/colors'
 import { Image } from 'expo-image'
@@ -18,56 +23,43 @@ export default function SignUpScreen() {
   const [code, setCode] = useState('')
   const [error, setError] = useState('')
 
-  // Handle submission of sign-up form
   const onSignUpPress = async () => {
     if (!isLoaded) return
 
-    // Start sign-up process using email and password provided
     try {
       await signUp.create({
         emailAddress,
         password
       })
 
-      // Send user an email with verification code
       await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
 
-      // Set 'pendingVerification' to true to display second form
-      // and capture OTP code
       setPendingVerification(true)
     } catch (err) {
       if (err.errors?.[0]?.code === 'form_identifier_exists') {
-        setError('That email address is already in use. Please try another.')
+        setError('Este email já está em uso. Por favor, tente outro.')
       } else {
-        setError('An error occurred. Please try again.')
+        setError('Ocorreu um erro. Por favor, tente novamente.')
       }
       console.log(err)
     }
   }
 
-  // Handle submission of verification form
   const onVerifyPress = async () => {
     if (!isLoaded) return
 
     try {
-      // Use the code the user provided to attempt verification
       const signUpAttempt = await signUp.attemptEmailAddressVerification({
         code
       })
 
-      // If verification was completed, set the session to active
-      // and redirect the user
       if (signUpAttempt.status === 'complete') {
         await setActive({ session: signUpAttempt.createdSessionId })
         router.replace('/')
       } else {
-        // If the status is not complete, check why. User may need to
-        // complete further steps.
         console.error(JSON.stringify(signUpAttempt, null, 2))
       }
     } catch (err) {
-      // See https://clerk.com/docs/custom-flows/error-handling
-      // for more info on error handling
       console.error(JSON.stringify(err, null, 2))
     }
   }
@@ -75,7 +67,7 @@ export default function SignUpScreen() {
   if (pendingVerification) {
     return (
       <View style={styles.verificationContainer}>
-        <Text style={styles.verificationTitle}>Verify your email</Text>
+        <Text style={styles.verificationTitle}>Verifique seu email</Text>
 
         {error ? (
           <View style={styles.errorBox}>
@@ -90,13 +82,13 @@ export default function SignUpScreen() {
         <TextInput
           style={[styles.verificationInput, error && styles.errorInput]}
           value={code}
-          placeholder="Enter your verification code"
-          placeholderTextColor="#9A8478"
+          placeholder="Digite seu código de verificação"
+          placeholderTextColor={COLORS.textLight}
           onChangeText={code => setCode(code)}
         />
 
         <TouchableOpacity onPress={onVerifyPress} style={styles.button}>
-          <Text style={styles.buttonText}>Verify</Text>
+          <Text style={styles.buttonText}>Verificar</Text>
         </TouchableOpacity>
       </View>
     )
@@ -115,7 +107,7 @@ export default function SignUpScreen() {
           style={styles.illustration}
         />
 
-        <Text style={styles.title}>Create Account</Text>
+        <Text style={styles.title}>Criar Conta</Text>
 
         {error ? (
           <View style={styles.errorBox}>
@@ -131,31 +123,145 @@ export default function SignUpScreen() {
           style={[styles.input, error && styles.errorInput]}
           autoCapitalize="none"
           value={emailAddress}
-          placeholderTextColor="#9A8478"
-          placeholder="Enter email"
+          placeholderTextColor={COLORS.textLight}
+          placeholder="Digite seu email"
           onChangeText={email => setEmailAddress(email)}
         />
 
         <TextInput
           style={[styles.input, error && styles.errorInput]}
           value={password}
-          placeholder="Enter password"
-          placeholderTextColor="#9A8478"
+          placeholder="Digite sua senha"
+          placeholderTextColor={COLORS.textLight}
           secureTextEntry={true}
           onChangeText={password => setPassword(password)}
         />
 
         <TouchableOpacity style={styles.button} onPress={onSignUpPress}>
-          <Text style={styles.buttonText}>Sign Up</Text>
+          <Text style={styles.buttonText}>Cadastrar</Text>
         </TouchableOpacity>
 
         <View style={styles.footerContainer}>
-          <Text style={styles.footerText}>Already have an account?</Text>
+          <Text style={styles.footerText}>Já tem uma conta?</Text>
           <TouchableOpacity onPress={() => router.back()}>
-            <Text style={styles.linkText}>Sign in</Text>
+            <Text style={styles.linkText}>Entrar</Text>
           </TouchableOpacity>
         </View>
       </View>
     </KeyboardAwareScrollView>
   )
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+    padding: 20,
+    justifyContent: 'center'
+  },
+  illustration: {
+    height: 310,
+    width: 300,
+    resizeMode: 'contain',
+    alignSelf: 'center'
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: COLORS.text,
+    marginVertical: 15,
+    textAlign: 'center'
+  },
+  input: {
+    backgroundColor: COLORS.card,
+    borderRadius: 12,
+    padding: 15,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    fontSize: 16,
+    color: COLORS.text,
+    placeholderTextColor: COLORS.textLight
+  },
+  errorInput: {
+    borderColor: COLORS.expense
+  },
+  button: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    marginTop: 10,
+    marginBottom: 20,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6
+  },
+  buttonText: {
+    color: COLORS.white,
+    fontSize: 18,
+    fontWeight: '600'
+  },
+  footerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8
+  },
+  footerText: {
+    color: COLORS.textLight,
+    fontSize: 16
+  },
+  linkText: {
+    color: COLORS.primary,
+    fontSize: 16,
+    fontWeight: '600'
+  },
+  verificationContainer: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+    padding: 20,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  verificationTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: COLORS.text,
+    marginBottom: 20,
+    textAlign: 'center'
+  },
+  verificationInput: {
+    backgroundColor: COLORS.card,
+    borderRadius: 12,
+    padding: 15,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    fontSize: 16,
+    color: COLORS.text,
+    width: '100%',
+    textAlign: 'center',
+    letterSpacing: 2,
+    placeholderTextColor: COLORS.textLight
+  },
+  errorBox: {
+    backgroundColor: `${COLORS.expense}20`,
+    padding: 12,
+    borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: COLORS.expense,
+    marginBottom: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%'
+  },
+  errorText: {
+    color: COLORS.text,
+    marginLeft: 8,
+    flex: 1,
+    fontSize: 14
+  }
+})

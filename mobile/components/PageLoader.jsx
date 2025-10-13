@@ -1,5 +1,4 @@
-import { View, ActivityIndicator } from 'react-native'
-import { styles } from '../assets/styles/home.styles'
+import { View, ActivityIndicator, StyleSheet } from 'react-native'
 import { COLORS } from '../constants/colors'
 
 const PageLoader = () => {
@@ -9,4 +8,13 @@ const PageLoader = () => {
     </View>
   )
 }
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: COLORS.background
+  }
+})
 export default PageLoader

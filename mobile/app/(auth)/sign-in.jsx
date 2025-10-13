@@ -1,9 +1,15 @@
 import { useSignIn } from '@clerk/clerk-expo'
 import { Link, useRouter } from 'expo-router'
-import { Text, TextInput, TouchableOpacity, View, Image } from 'react-native'
+import {
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  Image,
+  StyleSheet
+} from 'react-native'
 import { useState } from 'react'
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
-import { styles } from '../../assets/styles/auth.styles'
 import { Ionicons } from '@expo/vector-icons'
 import { COLORS } from '../../constants/colors'
 
@@ -15,32 +21,26 @@ export default function Page() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
 
-  // Handle the submission of the sign-in form
   const onSignInPress = async () => {
     if (!isLoaded) return
 
-    // Start the sign-in process using the email and password provided
     try {
       const signInAttempt = await signIn.create({
         identifier: emailAddress,
         password
       })
 
-      // If sign-in process is complete, set the created session as active
-      // and redirect the user
       if (signInAttempt.status === 'complete') {
         await setActive({ session: signInAttempt.createdSessionId })
         router.replace('/')
       } else {
-        // If the status isn't complete, check why. User might need to
-        // complete further steps.
         console.error(JSON.stringify(signInAttempt, null, 2))
       }
     } catch (err) {
       if (err.errors?.[0]?.code === 'form_password_incorrect') {
-        setError('Password is incorrect. Please try again.')
+        setError('Senha incorreta. Por favor, tente novamente.')
       } else {
-        setError('An error occurred. Please try again.')
+        setError('Ocorreu um erro. Por favor, tente novamente.')
       }
     }
   }
@@ -58,7 +58,7 @@ export default function Page() {
           source={require('../../assets/images/revenue-i4.png')}
           style={styles.illustration}
         />
-        <Text style={styles.title}>Welcome Back</Text>
+        <Text style={styles.title}>Bem-vindo de Volta</Text>
 
         {error ? (
           <View style={styles.errorBox}>
@@ -74,30 +74,30 @@ export default function Page() {
           style={[styles.input, error && styles.errorInput]}
           autoCapitalize="none"
           value={emailAddress}
-          placeholder="Enter email"
-          placeholderTextColor="#9A8478"
+          placeholder="Digite seu email"
+          placeholderTextColor={COLORS.textLight}
           onChangeText={emailAddress => setEmailAddress(emailAddress)}
         />
 
         <TextInput
           style={[styles.input, error && styles.errorInput]}
           value={password}
-          placeholder="Enter password"
-          placeholderTextColor="#9A8478"
+          placeholder="Digite sua senha"
+          placeholderTextColor={COLORS.textLight}
           secureTextEntry={true}
           onChangeText={password => setPassword(password)}
         />
 
         <TouchableOpacity style={styles.button} onPress={onSignInPress}>
-          <Text style={styles.buttonText}>Sign In</Text>
+          <Text style={styles.buttonText}>Entrar</Text>
         </TouchableOpacity>
 
         <View style={styles.footerContainer}>
-          <Text style={styles.footerText}>Don&apos;t have an account?</Text>
+          <Text style={styles.footerText}>Não tem uma conta?</Text>
 
           <Link href="/sign-up" asChild>
             <TouchableOpacity>
-              <Text style={styles.linkText}>Sign up</Text>
+              <Text style={styles.linkText}>Cadastre-se</Text>
             </TouchableOpacity>
           </Link>
         </View>
@@ -105,3 +105,89 @@ export default function Page() {
     </KeyboardAwareScrollView>
   )
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+    padding: 20,
+    justifyContent: 'center'
+  },
+  illustration: {
+    height: 310,
+    width: 300,
+    resizeMode: 'contain',
+    alignSelf: 'center'
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: COLORS.text,
+    marginVertical: 15,
+    textAlign: 'center'
+  },
+  input: {
+    backgroundColor: COLORS.card,
+    borderRadius: 12,
+    padding: 15,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    fontSize: 16,
+    color: COLORS.text,
+    placeholderTextColor: COLORS.textLight
+  },
+  errorInput: {
+    borderColor: COLORS.expense
+  },
+  button: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    marginTop: 10,
+    marginBottom: 20,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6
+  },
+  buttonText: {
+    color: COLORS.white,
+    fontSize: 18,
+    fontWeight: '600'
+  },
+  footerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8
+  },
+  footerText: {
+    color: COLORS.textLight,
+    fontSize: 16
+  },
+  linkText: {
+    color: COLORS.primary,
+    fontSize: 16,
+    fontWeight: '600'
+  },
+  errorBox: {
+    backgroundColor: `${COLORS.expense}20`,
+    padding: 12,
+    borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: COLORS.expense,
+    marginBottom: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%'
+  },
+  errorText: {
+    color: COLORS.text,
+    marginLeft: 8,
+    flex: 1,
+    fontSize: 14
+  }
+})
